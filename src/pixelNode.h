@@ -64,6 +64,8 @@ public:
 	
 	void send() {
 		udpRef->Send(pixelData, NBYTES);
+		//cout << pixelData << endl;
+		//cout << "pn send" << endl;
 	}
 
 	

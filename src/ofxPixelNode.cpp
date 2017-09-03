@@ -40,6 +40,7 @@ void ofxPixelNode::createPixelNode(string ip, string id) {
 	string ids[] = { "0.4.228.5" };
 	
 	if (!pixelNodes[ip].connected) {
+		cout << "pn connect to ip :: "+ip << endl;
 		std::shared_ptr<ofxUDPManager> udpRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
 		udpRef->Create();
 		udpRef->Connect(ip.c_str(), 4000);
