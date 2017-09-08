@@ -7,14 +7,19 @@
 class ofxPixelNode : public ofBaseApp {
 public:
 	void setup();
-    void setBrightness(int b);
     void send();
 	void draw();
-	void setFbo(ofFbo & f);
     void onExit(ofEventArgs &data);
 	void onUpdate(ofEventArgs &data);
 
+	void setFbo(ofFbo & f);
+	void setBrightness(int v);
+	void setScene(int v);
+	void yes();
+
 	vector < std::shared_ptr<ofxUDPManager> > udpConnections;
+	ofxUDPManager udpConnection;
+	ofxUDPManager udpYes;
 
 	int brightness = 127;
 
@@ -22,7 +27,6 @@ public:
 
 	int previewScale = 2;
 
-	ofxUDPManager udpConnection;
 	map <string, pixelNode> pixelNodes;
 	
 	

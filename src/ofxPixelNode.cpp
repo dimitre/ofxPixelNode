@@ -2,14 +2,29 @@
 
 //#define NMODULOS 14
 #define NMODULOS 2
+char yesData[3];
+char brightnessData[3];
+char sceneData[3];
 
 //--------------------------------------------------------------
 void ofxPixelNode::setup() {
+	
+	yesData[0] = 1;
+
+	
+	
 	// TO RECEIVE INCOMING UDP BROADCAST FROM PIXELNODES
 	udpConnection.Create();
 	udpConnection.SetTTL(1);
 	udpConnection.SetNonBlocking(true);
 	udpConnection.Bind(4001);
+	
+	udpYes.Create();
+	udpYes.SetEnableBroadcast(true);
+	udpYes.Connect("192.168.0.255", 4002);
+	udpYes.SetTTL(1);
+	udpYes.SetNonBlocking(true);
+//	udpYes.Bind(4002);
 
 	cout << "ofxPixelNode INIT -+-+-+-+-+-+-+-+<<<>>>" << endl;
 	string informationSociety = R"(
@@ -35,9 +50,16 @@ void ofxPixelNode::setup() {
 void ofxPixelNode::createPixelNode(string ip, string id) {
 	pixelNodes[ip].ip = ip;
 	pixelNodes[ip].id = id;
+	vector <ofPoint> posFbo;
+	for (int a=0; a<14; a++) {
+		int x = (a/2) * 30;
+		int y = (a%2) * 20;
+		posFbo.push_back(ofPoint (x,y));
+	}
 	
 	
-	string ids[] = { "0.4.228.5" };
+	
+	string ids[] = { "0.4.191.136", "0.4.191.200", "0.4.228.5", "0.4.191.209" };
 	
 	if (!pixelNodes[ip].connected) {
 		cout << "pn connect to ip :: "+ip << endl;
@@ -48,25 +70,23 @@ void ofxPixelNode::createPixelNode(string ip, string id) {
 		udpRef->SetNonBlocking(true);
 		udpConnections.push_back(udpRef);
 		
-		
-		//int ids[] = { 768572, 9725796, 9724665, 14405023, 9724601, 14405244, 14409397, 9726602, 14408232, 9725841 };
-		//map <string, posX>;
-		
 		int index = 0;
 
-//		for (auto & i : ids) {
-//			if (i==pixelNodes[ip].id) {
-//				pixelNodes[ip].pos = index;
-//			}
-//			index++;
-//		}
+		// fazer aqui a posicao x e y de cada controlador
+		for (auto & i : ids) {
+			if (i==id) {
+				pixelNodes[ip].index = index;
+				pixelNodes[ip].posFbo = posFbo[index];
+			}
+			index++;
+		}
 		
 		
 		// temporario
 		//pixelNodes[ip].pos = id;
 		
-		pixelNodes[ip].pos = 0;
-		pixelNodes[ip].id = id;
+//		pixelNodes[ip].pos = 0;
+//		pixelNodes[ip].id = id;
 		
 //		if (id == 1) {
 //			//pixelNodes[ip].fboPosX =
@@ -90,12 +110,17 @@ void ofxPixelNode::onUpdate(ofEventArgs &data) {
 	if (message != "") {
 		cout << message << endl;
 		vector <string> msgs = ofSplitString(message, " ");
-		string ip = msgs[1];
-		string id = msgs[2];
-		cout << "=-=-=-=-=" << endl;
-		
-		createPixelNode(ip, id);
+		if (msgs.size() >= 2) {
+			string ip = msgs[1];
+			string id = msgs[2];
+			cout << "=-=-=-=-=" << endl;
+			createPixelNode(ip, id);
+		}
 	}
+}
+
+void ofxPixelNode::yes() {
+	udpYes.Send(yesData, 1);
 }
 
 void ofxPixelNode::send() {
@@ -105,6 +130,8 @@ void ofxPixelNode::send() {
 	for (auto & p : pixelNodes) {
 		p.second.send();
 	}
+	
+	yes();
 }
 
 
@@ -114,17 +141,25 @@ void ofxPixelNode::draw() {
 	}
 }
 
+
 void ofxPixelNode::onExit(ofEventArgs &data) {
 	cout << "ofxPixelNode Exit!" << endl;
 }
 
+
 void ofxPixelNode::setBrightness(int b) {
-	cout << "setBrightness" << endl;
-	cout << b << endl;
-	
-	for (auto & p : pixelNodes) {
-		p.second.setBrightness(b);
-	}
+	cout << "setBrightness :: " << b <<  endl;
+	brightnessData[0] = 2;
+	brightnessData[1] = b / 8;
+	udpYes.Send(brightnessData,2);
+}
+
+
+void ofxPixelNode::setScene(int s) {
+	cout << "setScene :: " << s <<  endl;
+	sceneData[0] = 3;
+	sceneData[1] = s;
+	udpYes.Send(sceneData,2);
 }
 
 void ofxPixelNode::setFbo(ofFbo & f) {

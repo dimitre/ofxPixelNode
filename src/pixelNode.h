@@ -1,23 +1,21 @@
 #define NBYTES 300*3
-#define NBYTESCONFIG 10
+//#define NBYTESCONFIG 10
 
 class pixelNode {
 public:
 	string ip;
 	string id;
-	//int id = 0;
-	int pos;
+	int index;
 	
 	std::shared_ptr<ofxUDPManager> udpRef;
-	std::shared_ptr<ofxUDPManager> udpConfig;
+	//std::shared_ptr<ofxUDPManager> udpConfig;
 	char pixelData[NBYTES]; // 300 pixels x 3 bytes rgb
-	char dataConfig[NBYTESCONFIG];
+	//char dataConfig[NBYTESCONFIG];
 	
 
 	int w = 30;
 	int h = 20;
-	int fboPosX = 0;
-	int fboPosY = 0;
+	ofPoint posFbo = ofPoint(0,0);
 	
 	vector <int> pixelOrder; // nubank
 	ofFbo * _fbo = NULL;
@@ -40,38 +38,30 @@ public:
 	void setFbo(ofFbo & f) {
 		_fbo = &f;
 	}
+	
+
 
 	void prepare() {
 		fbo.begin();
+		ofClear(0,255);
 		ofSetColor(255);
 		if (_fbo != NULL) {
-			_fbo->draw(-fboPosX, -fboPosY);
+			_fbo->draw(-posFbo.x, -posFbo.y);
 		} else {
 			cout << "fbo is null" << endl;
 		}
 		fbo.end();
 		fbo.readToPixels(pixels);
+		
 		for (int a=0; a<pixelOrder.size(); a++) {
 			int cursor = a*3;
-			//void* memcpy( void* dest, const void* src, std::size_t count );
-			memcpy(&pixelData[cursor], &pixels.getData()[cursor], 3);
-			//memcpy aqui pra 3 bytes? pode ser.
-//			pixelData[a * 3 + 0] = pixels.getData()[pixelOrder[a] * 3 + 0];
-//			pixelData[a * 3 + 1] = pixels.getData()[pixelOrder[a] * 3 + 1];
-//			pixelData[a * 3 + 2] = pixels.getData()[pixelOrder[a] * 3 + 2];
+			int i = pixelOrder[a]*3;
+			memcpy(&pixelData[cursor], &pixels.getData()[i], 3);
 		}
 	}
 	
 	void send() {
 		udpRef->Send(pixelData, NBYTES);
-		//cout << pixelData << endl;
-		//cout << "pn send" << endl;
-	}
-
-	
-	void setBrightness(int b) {
-		dataConfig[1] = b;
-		udpConfig->Send(dataConfig, NBYTESCONFIG);
 	}
 
 	void draw() {
@@ -82,9 +72,8 @@ public:
 		}
 
 		ofPushMatrix();
-//		ofTranslate(pos * 200, 0);
 		int altura = 48;
-		ofTranslate( 1200, pos * 50);
+		ofTranslate( 1200, index * altura);
 		ofDrawRectangle(0, 0, 190, altura - 2);
 		
 		ofSetColor(255);
@@ -101,6 +90,25 @@ public:
 	void createPixelPosition() {
 		int offImpar = -1;
 		int offPar = 1;
+		
+//		pixelOrder.push_back(30*20 - 2);
+//		pixelOrder.push_back(30*20 - 4);
+//		pixelOrder.push_back(30*20 - 6);
+//		pixelOrder.push_back(30*20 - 7);
+
+//		for (int a=0; a<15; a++) {
+
+//		for (int a=14; a>=0; a--) {
+//			pixelOrder.push_back(30*19+a*2);
+//		}
+		
+//		for (int a=0; a<15; a++) {
+//		//for (int a=14; a>=0; a--) {
+//			pixelOrder.push_back(30 * 19 + a*2);
+//		}
+		//pixelOrder.push_back(30 * 20 - 14);
+		
+		
 		
 		for (int y = 10; y>0; y--) {
 			int yPar = 20;
