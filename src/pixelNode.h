@@ -8,9 +8,10 @@ public:
 	int index;
 	
 	std::shared_ptr<ofxUDPManager> udpRef;
-	//std::shared_ptr<ofxUDPManager> udpConfig;
+	std::shared_ptr<ofxUDPManager> udpConfig;
+	
 	char pixelData[NBYTES]; // 300 pixels x 3 bytes rgb
-	//char dataConfig[NBYTESCONFIG];
+	char dataConfig[3];
 	
 
 	int w = 30;
@@ -24,6 +25,21 @@ public:
 	
 
 	bool connected = false;
+	
+	
+	void setScene(int c) {
+		//cout << "pixelnode setScene! " << c << endl;
+		dataConfig[0] = 3;
+		dataConfig[1] = c;
+		udpConfig->Send(dataConfig, 2);
+		
+//		string comando = "echo -ne '\\x03\\x0"+ofToString(c)+"' >/dev/udp/"+ip+"/4002";
+//		cout << comando << endl;
+//		ofSystem(comando);
+		
+
+	}
+	
 	void init() {
 		connected = true;
 		fbo.allocate(w, h, GL_RGB);
@@ -73,14 +89,14 @@ public:
 
 		ofPushMatrix();
 		int altura = 48;
-		ofTranslate( 1200, index * altura);
+		ofTranslate( ofGetWindowWidth() - 220, index * altura);
 		ofDrawRectangle(0, 0, 190, altura - 2);
 		
 		ofSetColor(255);
 		fbo.draw(0,0, fbo.getWidth() * 2, fbo.getHeight()*2);
 		
 		string s = ip
-		+ "\n" + id;
+		+ "\n" + id + " :: " + ofToString(posFbo.x) + "x" + ofToString(posFbo.y);
 		ofDrawBitmapString(s, 10, 20);
 		ofPopMatrix();
 	}

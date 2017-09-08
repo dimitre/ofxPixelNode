@@ -27,9 +27,14 @@ public:
 
 	int previewScale = 2;
 
+	void createPixelNode(string ip, string id);
+	ofFbo * _fbo;
+	
 	map <string, pixelNode> pixelNodes;
 	
 	
-	void createPixelNode(string ip, string id);
-	ofFbo * _fbo;
+	vector < std::shared_ptr<ofxUDPManager> > udpConfigs;
+	
+	
+	void identifyPixelnode(int i);
 };

@@ -2,17 +2,21 @@
 
 //#define NMODULOS 14
 #define NMODULOS 2
+
+// passar pra la
 char yesData[3];
 char brightnessData[3];
 char sceneData[3];
 
+vector <ofPoint> posFbo;
+vector <string> ids;
+
+
+
 //--------------------------------------------------------------
 void ofxPixelNode::setup() {
-	
 	yesData[0] = 1;
 
-	
-	
 	// TO RECEIVE INCOMING UDP BROADCAST FROM PIXELNODES
 	udpConnection.Create();
 	udpConnection.SetTTL(1);
@@ -39,36 +43,74 @@ void ofxPixelNode::setup() {
 	cout << informationSociety << endl;
 	ofAddListener(ofEvents().exit, this,   &ofxPixelNode::onExit);
 	ofAddListener(ofEvents().update, this,   &ofxPixelNode::onUpdate);
-	
-	
-//	for (int a=0; a<NMODULOS; a++) {
-//		createPixelNode("192.168.0." + ofToString(200+a), a);
-//	}
-}
-// end setup
 
-void ofxPixelNode::createPixelNode(string ip, string id) {
-	pixelNodes[ip].ip = ip;
-	pixelNodes[ip].id = id;
-	vector <ofPoint> posFbo;
+	
+	
 	for (int a=0; a<14; a++) {
 		int x = (a/2) * 30;
 		int y = (a%2) * 20;
 		posFbo.push_back(ofPoint (x,y));
+		//cout << posFbo.back() << endl;
 	}
 	
-	
-	
-	string ids[] = { "0.4.191.136", "0.4.191.200", "0.4.228.5", "0.4.191.209" };
-	
-	if (!pixelNodes[ip].connected) {
+	if (ofFile::doesFileExist("pixelNodes.txt")) {
+		ofBuffer buff2 = ofBufferFromFile("pixelNodes.txt");
+		for(auto & i : buff2.getLines()) {
+			ids.push_back(ofSplitString(i, " ")[0]);
+		}
+		cout << "=-=-=-=-= initializing pixelNodes by TXT ID =-=-=-=-=" << endl;
+	} else {
+		string idLines =
+R"(
+0.4.191.136
+0.4.191.200
+0.4.191.26
+0.4.228.5
+0.4.191.156 # TERCEIRA COLUNA DE PAINEIS, CIMA
+0.4.192.97 # TERCEIRA COLUNA DE PAINEIS, CIMA
+0.4.191.209
+)";
+		
+		for (auto & i : ofSplitString(idLines, "\n")) {
+			if (i != "") {
+				ids.push_back(ofSplitString(i, " ")[0]);
+			}
+		}
+	}
+}
+// end setup
+
+
+
+
+void ofxPixelNode::createPixelNode(string ip, string id) {
+	if ( pixelNodes.find(ip) == pixelNodes.end()) {
+		pixelNodes[ip].ip = ip;
+		pixelNodes[ip].id = id;
+		
+		//	};
+	//if (!pixelNodes[ip].connected) {
 		cout << "pn connect to ip :: "+ip << endl;
+		{
 		std::shared_ptr<ofxUDPManager> udpRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
 		udpRef->Create();
 		udpRef->Connect(ip.c_str(), 4000);
 		udpRef->SetTTL(1);
 		udpRef->SetNonBlocking(true);
 		udpConnections.push_back(udpRef);
+		}
+
+		
+		// remover este depois
+		{
+		std::shared_ptr<ofxUDPManager> udpConfigRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
+		udpConfigRef->Create();
+		udpConfigRef->Connect(ip.c_str(), 4002);
+		udpConfigRef->SetTTL(1);
+		udpConfigRef->SetNonBlocking(true);
+		udpConfigs.push_back(udpConfigRef);
+		}
+		
 		
 		int index = 0;
 
@@ -81,23 +123,16 @@ void ofxPixelNode::createPixelNode(string ip, string id) {
 			index++;
 		}
 		
-		
 		// temporario
-		//pixelNodes[ip].pos = id;
+		pixelNodes[ip].index = pixelNodes.size()-1;
 		
-//		pixelNodes[ip].pos = 0;
-//		pixelNodes[ip].id = id;
+		pixelNodes[ip].udpConfig = udpConfigs.back();
 		
-//		if (id == 1) {
-//			//pixelNodes[ip].fboPosX =
-//			pixelNodes[ip].fboPosY = 20;
-//		}
 		pixelNodes[ip].udpRef = udpConnections.back();
 		pixelNodes[ip].init();
 		pixelNodes[ip].setFbo(*_fbo);
 		pixelNodes[ip].connected = true;
 	}
-
 }
 
 void ofxPixelNode::onUpdate(ofEventArgs &data) {
@@ -108,12 +143,12 @@ void ofxPixelNode::onUpdate(ofEventArgs &data) {
 	string message=udpMessage;
 	
 	if (message != "") {
-		cout << message << endl;
 		vector <string> msgs = ofSplitString(message, " ");
 		if (msgs.size() >= 2) {
 			string ip = msgs[1];
 			string id = msgs[2];
-			cout << "=-=-=-=-=" << endl;
+			//cout << message << endl;
+			//cout << "=-=-=-=-=" << endl;
 			createPixelNode(ip, id);
 		}
 	}
@@ -141,6 +176,24 @@ void ofxPixelNode::draw() {
 	}
 }
 
+void ofxPixelNode::identifyPixelnode(int index) {
+//	cout << "identifyPixelnode" << endl;
+//	for (auto & p : pixelNodes) {
+//		p.second.setScene(0);
+//	}
+	
+	int i = 0;
+	for (auto & p : pixelNodes) {
+		if (i == index) {
+			p.second.setScene(1);
+			cout << "PixelNode " + p.second.ip << endl;
+		} else {
+			p.second.setScene(0);
+		}
+		i++;
+	}
+
+}
 
 void ofxPixelNode::onExit(ofEventArgs &data) {
 	cout << "ofxPixelNode Exit!" << endl;
@@ -150,7 +203,7 @@ void ofxPixelNode::onExit(ofEventArgs &data) {
 void ofxPixelNode::setBrightness(int b) {
 	cout << "setBrightness :: " << b <<  endl;
 	brightnessData[0] = 2;
-	brightnessData[1] = b / 8;
+	brightnessData[1] = b;
 	udpYes.Send(brightnessData,2);
 }
 
