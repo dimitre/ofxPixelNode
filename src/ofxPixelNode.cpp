@@ -64,12 +64,18 @@ void ofxPixelNode::setup() {
 		string idLines =
 R"(
 0.4.191.136
+0.4.191.209 2
+0.4.191.156 3
+0.4.191.26 4
+0.4.197.21 5
+0.4.191.145 6
+0.4.227.191 7
+0.4.221.184 8
+0.4.191.74 9
+0.4.198.186 10
+0.4.192.97
 0.4.191.200
-0.4.191.26
 0.4.228.5
-0.4.191.156 # TERCEIRA COLUNA DE PAINEIS, CIMA
-0.4.192.97 # TERCEIRA COLUNA DE PAINEIS, CIMA
-0.4.191.209
 )";
 		
 		for (auto & i : ofSplitString(idLines, "\n")) {
