@@ -5,7 +5,7 @@ class pixelNode {
 public:
 	string ip;
 	string id;
-	int index;
+	int index = -1;
 	
 	std::shared_ptr<ofxUDPManager> udpRef;
 	std::shared_ptr<ofxUDPManager> udpConfig;
@@ -26,11 +26,13 @@ public:
 
 	bool connected = false;
 	
+	int cena = 0;
 	
 	void setScene(int c) {
 		//cout << "pixelnode setScene! " << c << endl;
 		dataConfig[0] = 3;
 		dataConfig[1] = c;
+		cena = c;
 		udpConfig->Send(dataConfig, 2);
 		
 //		string comando = "echo -ne '\\x03\\x0"+ofToString(c)+"' >/dev/udp/"+ip+"/4002";
@@ -85,6 +87,10 @@ public:
 			ofSetColor(0, 200, 0);
 		} else {
 			ofSetColor(255,0,0);
+		}
+		
+		if (cena == 1) {
+			ofSetColor(0,0,255);
 		}
 
 		ofPushMatrix();

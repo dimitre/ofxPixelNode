@@ -54,6 +54,7 @@ void ofxPixelNode::setup() {
 	}
 	
 	if (ofFile::doesFileExist("pixelNodes.txt")) {
+		
 		ofBuffer buff2 = ofBufferFromFile("pixelNodes.txt");
 		for(auto & i : buff2.getLines()) {
 			ids.push_back(ofSplitString(i, " ")[0]);
@@ -80,7 +81,7 @@ R"(
 }
 // end setup
 
-
+int highIndex = 14;
 
 
 void ofxPixelNode::createPixelNode(string ip, string id) {
@@ -90,7 +91,7 @@ void ofxPixelNode::createPixelNode(string ip, string id) {
 		
 		//	};
 	//if (!pixelNodes[ip].connected) {
-		cout << "pn connect to ip :: "+ip << endl;
+		cout << ">>> ofxPixelNode connect to ip :: "+ip << endl;
 		{
 		std::shared_ptr<ofxUDPManager> udpRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
 		udpRef->Create();
@@ -124,7 +125,12 @@ void ofxPixelNode::createPixelNode(string ip, string id) {
 		}
 		
 		// temporario
-		pixelNodes[ip].index = pixelNodes.size()-1;
+		
+		if (pixelNodes[ip].index < 0) {
+			pixelNodes[ip].index = highIndex;
+			highIndex++;
+		}
+		//pixelNodes[ip].index = pixelNodes.size()-1;
 		
 		pixelNodes[ip].udpConfig = udpConfigs.back();
 		
