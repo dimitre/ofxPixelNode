@@ -37,4 +37,7 @@ public:
 	
 	
 	void identifyPixelnode(int i);
+	
+	
+	bool debug = false;
 };

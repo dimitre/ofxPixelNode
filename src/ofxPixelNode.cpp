@@ -11,7 +11,7 @@ char sceneData[3];
 vector <ofPoint> posFbo;
 vector <string> ids;
 
-
+bool connected = false;
 
 //--------------------------------------------------------------
 void ofxPixelNode::setup() {
@@ -23,12 +23,8 @@ void ofxPixelNode::setup() {
 	udpConnection.SetNonBlocking(true);
 	udpConnection.Bind(4001);
 	
-	udpYes.Create();
-	udpYes.SetEnableBroadcast(true);
-	udpYes.Connect("192.168.0.255", 4002);
-	udpYes.SetTTL(1);
-	udpYes.SetNonBlocking(true);
-//	udpYes.Bind(4002);
+
+
 
 	cout << "ofxPixelNode INIT -+-+-+-+-+-+-+-+<<<>>>" << endl;
 	string informationSociety = R"(
@@ -92,6 +88,17 @@ int highIndex = 14;
 
 
 void ofxPixelNode::createPixelNode(string ip, string id) {
+	
+	if (!connected) {
+		udpYes.Create();
+		udpYes.SetEnableBroadcast(true);
+		udpYes.Connect("192.168.0.255", 4002);
+		udpYes.SetTTL(1);
+		udpYes.SetNonBlocking(true);
+		
+		connected = true;
+	}
+	
 	if ( pixelNodes.find(ip) == pixelNodes.end()) {
 		pixelNodes[ip].ip = ip;
 		pixelNodes[ip].id = id;
@@ -100,23 +107,23 @@ void ofxPixelNode::createPixelNode(string ip, string id) {
 	//if (!pixelNodes[ip].connected) {
 		cout << ">>> ofxPixelNode connect to ip :: "+ip << endl;
 		{
-		std::shared_ptr<ofxUDPManager> udpRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
-		udpRef->Create();
-		udpRef->Connect(ip.c_str(), 4000);
-		udpRef->SetTTL(1);
-		udpRef->SetNonBlocking(true);
-		udpConnections.push_back(udpRef);
+			std::shared_ptr<ofxUDPManager> udpRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
+			udpRef->Create();
+			udpRef->Connect(ip.c_str(), 4000);
+			udpRef->SetTTL(1);
+			udpRef->SetNonBlocking(true);
+			udpConnections.push_back(udpRef);
 		}
 
 		
 		// remover este depois
 		{
-		std::shared_ptr<ofxUDPManager> udpConfigRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
-		udpConfigRef->Create();
-		udpConfigRef->Connect(ip.c_str(), 4002);
-		udpConfigRef->SetTTL(1);
-		udpConfigRef->SetNonBlocking(true);
-		udpConfigs.push_back(udpConfigRef);
+			std::shared_ptr<ofxUDPManager> udpConfigRef = std::shared_ptr<ofxUDPManager>(new ofxUDPManager);
+			udpConfigRef->Create();
+			udpConfigRef->Connect(ip.c_str(), 4002);
+			udpConfigRef->SetTTL(1);
+			udpConfigRef->SetNonBlocking(true);
+			udpConfigs.push_back(udpConfigRef);
 		}
 		
 		
@@ -172,14 +179,16 @@ void ofxPixelNode::yes() {
 }
 
 void ofxPixelNode::send() {
-	for (auto & p : pixelNodes) {
-		p.second.prepare();
-	}
-	for (auto & p : pixelNodes) {
-		p.second.send();
-	}
+	if (connected) {
+		for (auto & p : pixelNodes) {
+			p.second.prepare();
+		}
+		for (auto & p : pixelNodes) {
+			p.second.send();
+		}
 	
-	yes();
+		yes();
+	}
 }
 
 
@@ -209,20 +218,28 @@ void ofxPixelNode::identifyPixelnode(int index) {
 }
 
 void ofxPixelNode::onExit(ofEventArgs &data) {
-	cout << "ofxPixelNode Exit!" << endl;
+	if (debug) {
+		cout << "ofxPixelNode Exit!" << endl;
+	}
 }
 
 
 void ofxPixelNode::setBrightness(int b) {
-	cout << "setBrightness :: " << b <<  endl;
-	brightnessData[0] = 2;
-	brightnessData[1] = b;
-	udpYes.Send(brightnessData,2);
+	if (debug) {
+		cout << "ofxPixelNode :: setBrightness :: " << b <<  endl;
+	}
+	if (connected) {
+		brightnessData[0] = 2;
+		brightnessData[1] = b;
+		udpYes.Send(brightnessData,2);
+	}
 }
 
 
 void ofxPixelNode::setScene(int s) {
-	cout << "setScene :: " << s <<  endl;
+	if (debug) {
+		cout << "setScene :: " << s <<  endl;
+	}
 	sceneData[0] = 3;
 	sceneData[1] = s;
 	udpYes.Send(sceneData,2);

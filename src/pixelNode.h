@@ -84,7 +84,7 @@ public:
 
 	void draw() {
 		if (connected) {
-			ofSetColor(0, 200, 0);
+			ofSetColor(0, 200, 30, 200);
 		} else {
 			ofSetColor(255,0,0);
 		}
