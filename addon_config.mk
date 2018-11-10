@@ -1,5 +1,5 @@
 meta:
-	ADDON_NAME = ofxPixelnode
+	ADDON_NAME = ofxPixelNode
 	ADDON_DESCRIPTION = PixelNode v0.01
 	ADDON_AUTHOR = Dimitre
 	ADDON_TAGS = "APA102" "APA" "LED" "LEDSTRIP"
